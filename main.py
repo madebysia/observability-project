@@ -1,38 +1,34 @@
 import structlog
 import time
 import random
-import os
+import uuid # For a unique, anonymous ID
 
 # Initialize a structured logger
 log = structlog.get_logger()
 
+# Generate a random, non-personal ID for this session
+NODE_ID = f"node-{uuid.uuid4().hex[:8]}"
+
 def capture_metrics():
-    """Simulates capturing system telemetry."""
     return {
         "cpu_usage_percent": round(random.uniform(2.0, 15.0), 2),
         "memory_rss_mb": random.randint(40, 100),
-        "active_threads": random.randint(1, 5)
     }
 
 def main():
+    # Use generic identifiers only
     log.info("service_initialized", 
-             project="observability-project",
-             pid=os.getpid(),
-             version="0.1.0")
+             node_id=NODE_ID,
+             os_type="posix", 
+             status="isolated")
 
     try:
         while True:
-            # Capture simulated telemetry
             metrics = capture_metrics()
-            
-            # Emit a structured log entry
-            log.info("telemetry_heartbeat", **metrics)
-            
-            # Follow a 5-second pulse
+            log.info("telemetry_heartbeat", node_id=NODE_ID, **metrics)
             time.sleep(5)
-            
     except KeyboardInterrupt:
-        log.info("service_shutdown", reason="manual_interrupt")
+        log.info("service_shutdown")
 
 if __name__ == "__main__":
     main()
